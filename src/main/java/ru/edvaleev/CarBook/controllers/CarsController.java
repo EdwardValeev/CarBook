@@ -12,13 +12,10 @@ import ru.edvaleev.CarBook.dto.CarDTO;
 import ru.edvaleev.CarBook.dto.DataBaseDTO;
 import ru.edvaleev.CarBook.models.Car;
 import ru.edvaleev.CarBook.services.CarsService;
-import ru.edvaleev.CarBook.util.CarErrorResponse;
-import ru.edvaleev.CarBook.util.CarNotCreatedException;
-import ru.edvaleev.CarBook.util.CarNotDeletedException;
-import ru.edvaleev.CarBook.util.CarNotFoundException;
+import ru.edvaleev.CarBook.util.*;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/car-book")
@@ -34,15 +31,39 @@ public class CarsController {
         this.modelMapper = modelMapper;
     }
 
-    @GetMapping
-    public List<CarDTO> getCars() {
-        return carsService.findAll().stream().map(this::convertToCarDTO)
-                .collect(Collectors.toList());
+    @GetMapping()
+    public List<Car> getCars(@RequestParam(required = false, name = "brand") @Valid String brand,
+                          @RequestParam(required = false, name = "color") @Valid String color,
+                          @RequestParam(required = false, name = "yearOfManufacture") @Valid Integer yearOfManufacture) {
+
+        List<Car> foundCarsList = carsService.findAll();
+
+        List<Car> foundParamCarsList = new ArrayList<>();
+        if(brand != null) {
+            for (Car car : foundCarsList) {
+                if (car.getBrand().equals(brand))
+                    foundParamCarsList.add(car);
+            }
+            return foundParamCarsList;
+        } else if(color != null) {
+            for (Car car : foundCarsList) {
+                if (car.getColor().equals(color))
+                    foundParamCarsList.add(car);
+            }
+            return foundParamCarsList;
+        } else if(yearOfManufacture != null) {
+            for (Car car : foundCarsList) {
+                if (car.getYearOfManufacture() == yearOfManufacture)
+                    foundParamCarsList.add(car);
+            }
+            return foundParamCarsList;
+        }
+        return foundCarsList;
     }
 
-    @GetMapping("/{registrationNumber}")
-    public CarDTO getCar(@PathVariable("registrationNumber") String registrationNumber) {
-        return convertToCarDTO(carsService.findOne(registrationNumber));
+    @GetMapping("/{id}")
+    public CarDTO getCar(@PathVariable("id") int id) {
+        return convertToCarDTO(carsService.findOne(id));
     }
 
     @PostMapping
@@ -66,9 +87,24 @@ public class CarsController {
         return ResponseEntity.status(HttpStatus.OK).body("Автомобиль успешно добавлен в базу данных!");
     }
 
-    @DeleteMapping("/{registrationNumber}")
-    public ResponseEntity delete(@PathVariable("registrationNumber") @Valid String registrationNumber) {
-        carsService.delete(registrationNumber);
+    @PatchMapping("/{id}")
+    public ResponseEntity update(@PathVariable("id") int id, @RequestParam(required = false, name = "brand") @Valid String brand,
+                                 @RequestParam(required = false, name = "color") @Valid String color,
+                                 @RequestParam(required = false, name = "yearOfManufacture") @Valid Integer yearOfManufacture) {
+        Car car = carsService.findOne(id);
+
+        if(brand != null) car.setBrand(brand);
+        if(color != null) car.setColor(color);
+        if(yearOfManufacture != null) car.setYearOfManufacture(yearOfManufacture);
+
+        carsService.save(car);
+
+        return ResponseEntity.status(HttpStatus.OK).body("Автомобиль успешно обновлен!");
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity delete(@PathVariable("id") int id) {
+        carsService.delete(id);
 
         return ResponseEntity.status(HttpStatus.OK).body("Автомобиль успешно удален из базы данных!");
     }
@@ -113,6 +149,15 @@ public class CarsController {
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler
+    private ResponseEntity<CarErrorResponse> handleException(CarNotUpdatedException e) {
+        CarErrorResponse response = new CarErrorResponse(
+                e.getMessage(),
+                System.currentTimeMillis()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
 
     public Car convertToCar(CarDTO carDTO) {
         return modelMapper.map(carDTO, Car.class);
@@ -121,8 +166,4 @@ public class CarsController {
     public CarDTO convertToCarDTO(Car car) {
         return modelMapper.map(car, CarDTO.class);
     }
-
-//    public LocalDateTime convertToLocalDateTime(long timestamp) {
-//        return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
-//    }
 }

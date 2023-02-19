@@ -1,6 +1,5 @@
 package ru.edvaleev.CarBook.dto;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -18,8 +17,8 @@ public class CarDTO {
     @NotEmpty(message="Цвет не должен быть пустым")
     private String color;
 
-    @Min(value = 1885, message = "Год выпуска должен быть позже 1885 года")
-    @Max(value = 2024, message = "Год выпуска должен быть раньше 2024 года")
+    @Min(value = 1885, message = "Год выпуска не должен быть раньше 1886 года")
+    @Max(value = 2024, message = "Год выпуска не должен быть позже 2023 года")
     private int yearOfManufacture;
 
     public String getRegistrationNumber() {

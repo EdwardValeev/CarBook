@@ -8,11 +8,12 @@ import java.util.Optional;
 
 @Repository
 public interface CarsRepository extends JpaRepository<Car, Integer> {
-    Optional<Car> findByRegistrationNumber(String registrationNumber);
-
-    void deleteByRegistrationNumber(String registrationNumber);
+    Optional<Car> findById(int id);
 
     Optional<Car> findFirstByOrderByIdAsc();
 
     Optional<Car> findFirstByOrderByIdDesc();
+
+
+
 }

@@ -26,8 +26,8 @@ public class CarsService {
         return carsRepository.findAll();
     }
 
-    public Car findOne(String registrationNumber) {
-        Optional<Car> foundCar = carsRepository.findByRegistrationNumber(registrationNumber);
+    public Car findOne(int id) {
+        Optional<Car> foundCar = carsRepository.findById(id);
 
         return foundCar.orElseThrow(CarNotFoundException::new);
     }
@@ -40,8 +40,8 @@ public class CarsService {
     }
 
     @Transactional
-    public void delete(String registrationNumber) {
-        Optional<Car> carToDelete = carsRepository.findByRegistrationNumber(registrationNumber);
+    public void delete(int id) {
+        Optional<Car> carToDelete = carsRepository.findById(id);
         if(carToDelete.isPresent()){
             carsRepository.delete(carToDelete.get());
         } else {
